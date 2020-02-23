@@ -1,5 +1,6 @@
 import PubSubRedis from './pubsub-redis';
 import { Task, CompletedTask } from './types';
+import logger from './logger';
 
 export type MasterConfig = {
   tasksQueue: string;
@@ -17,6 +18,8 @@ class Master {
   }
 
   async start() {
+    logger.info('Starting master');
+
     const { resultsChannel } = this.config;
 
     // this might fail or not subscribe to all channels
@@ -30,13 +33,15 @@ class Master {
   }
 
   async stop() {
+    logger.info('Stopping master');
     await this.pubSubRedis.disconnect();
   }
 
   async sendTask(task: Task) {
-    const { tasksQueue } = this.config;
+    logger.info(`Sending task "${task.id}"`);
+    logger.debug(JSON.stringify(task));
 
-    console.log(`SENDING TASK ${task.id}`);
+    const { tasksQueue } = this.config;
 
     // publish task
     await this.pubSubRedis.push(tasksQueue, JSON.stringify(task));
@@ -46,11 +51,10 @@ class Master {
   }
 
   private async onResult(result: CompletedTask) {
-    const { resultsList } = this.config;
+    logger.info(`Got result for task "${result.id}"`);
+    logger.debug(JSON.stringify(result));
 
-    console.log(`Got result:`);
-    console.log(JSON.stringify(result, undefined, 2));
-    console.log(`===========`);
+    const { resultsList } = this.config;
 
     await this.pubSubRedis.push(resultsList, JSON.stringify(result));
   }

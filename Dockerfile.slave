@@ -1,0 +1,15 @@
+FROM node:lts-alpine
+
+WORKDIR /usr/cloud-worker
+
+COPY package.json yarn.lock ./
+
+RUN yarn
+
+COPY tsconfig.json .env ./
+COPY src/ ./src
+
+RUN yarn build
+RUN rm -rf tsconfig.json src/ 
+
+ENTRYPOINT yarn run:slave

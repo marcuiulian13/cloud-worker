@@ -1,4 +1,5 @@
 type Config = {
+  debug: boolean;
   isSlave: boolean;
   redis: {
     host: string;
@@ -20,6 +21,7 @@ export function readEnv(key: string): string {
 }
 
 let config: Config = {
+  debug: process.env.DEBUG === 'true',
   isSlave: readEnv('TYPE') === 'slave',
   redis: {
     host: readEnv('REDIS_HOST'),

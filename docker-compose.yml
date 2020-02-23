@@ -1,16 +1,37 @@
-version: "2"
+version: '2'
 
 services:
   redis:
-    image: "bitnami/redis:5.0"
+    image: 'bitnami/redis:5.0'
     environment:
       - REDIS_PASSWORD=pw123
-      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
     ports:
-      - "6379:6379"
-    volumes:
-      - "redis_data:/bitnami/redis/data"
+      - '6379:6379'
+    networks:
+      - redis_net
+
+  slave:
+    build:
+      context: .
+      dockerfile: Dockerfile.slave
+    depends_on:
+      - redis
+    networks:
+      - redis_net
+
+  master:
+    build:
+      context: .
+      dockerfile: Dockerfile.master
+    depends_on:
+      - redis
+      - slave
+    networks:
+      - redis_net
 
 volumes:
   redis_data:
     driver: local
+
+networks:
+  redis_net:

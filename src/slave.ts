@@ -1,6 +1,7 @@
 import PubSubRedis from './pubsub-redis';
 import { Task, CompletedTask } from './types';
 import { process } from './processor';
+import logger from './logger';
 
 export type SlaveConfig = {
   tasksQueue: string;
@@ -19,10 +20,12 @@ class Slave {
   }
 
   async start() {
+    logger.info('Starting slave');
     await this.tryProcessTask();
   }
 
   async stop() {
+    logger.info('Stopping slave');
     await this.pubSubRedis.disconnect();
   }
 
@@ -46,17 +49,14 @@ class Slave {
   private async processTask(task: Task) {
     this.taskInProgress = true;
 
-    console.log(`Processing task:`);
-    console.log(JSON.stringify(task, undefined, 2));
+    logger.info(`Processing task "${task.id}"`);
+    logger.debug(JSON.stringify(task));
 
     // do task
     const result = await process(task);
     await this.sendResult(result);
 
     this.taskInProgress = false;
-
-    console.log(`DONE`);
-    console.log(`================`);
 
     // resume consuming tasks
     setImmediate(() => {
@@ -66,6 +66,9 @@ class Slave {
 
   private async sendResult(result: CompletedTask) {
     const { resultsChannel } = this.config;
+
+    logger.info(`Sending result "${result.id}"`);
+    logger.debug(JSON.stringify(result));
 
     await this.pubSubRedis.publish(resultsChannel, JSON.stringify(result));
   }
