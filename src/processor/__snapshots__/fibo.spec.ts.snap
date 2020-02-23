@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Processor: fibo processes a FIBO task and resolves with a CompletedTask 1`] = `
+Object {
+  "id": "random-id",
+  "payload": Object {
+    "n": 10,
+  },
+  "result": Object {
+    "value": 55,
+  },
+  "type": "FIBO",
+}
+`;

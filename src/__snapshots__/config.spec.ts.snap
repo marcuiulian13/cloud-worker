@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`config readEnv throws an error if key is not found in env 1`] = `"\\"FOOBAR_NO_CHANCE_TO_BE_IN_ENV\\" not found in environment"`;
