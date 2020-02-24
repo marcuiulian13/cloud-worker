@@ -44,6 +44,10 @@ You can run in parallel as many slaves as necessary.
 To start the master, `yarn build` the project if not done already, then `yarn start:master`. The service will connect to the configured Redis instance (see `.env`) and by default will publish 42 tasks for computing the first 42 Fibonacci numbers.
 **Only one master should run at a time.**
 
+#### Logs
+
+By default, the application will produce logs in a JSON format. To have them output in a human readable format, you can pipe the output of the service to `pino-pretty` like this: `yarn start:master | yarn pino-pretty`.
+
 ### Checking stored data
 
 To check the tasks queue or the results list, you can use the [redis-cli](https://redis.io/topics/rediscli) and check the configured `REDIS_TASKS_QUEUE` and `REDIS_RESULTS_LIST` keys:
@@ -66,4 +70,19 @@ SUBSCRIBE <REDIS_RESULTS_CHANNEL>
 
 ## Running the project with docker-compose
 
-You can run the project with `docker-compose up`. This will start a Redis instance, a slave and a master publishing the 42 Fibonacci tasks. You can run multiple slaves by duplicating the slave configuration in `docker-compose.yml`.
+You can run the project with `docker-compose up`. This will start a Redis instance, a slave and a master publishing the 42 Fibonacci tasks.
+
+### Scaling
+
+To run multiple instances of the slave service, you can start the project using `docker-compose up --scale slave=<number-of-slave-instances>`. You can scale the slave to as many instances as you want.
+
+## Sequential task processing
+
+Currently, all the tasks are processed in parallel and no order of completion is guaranteed.
+
+A way of achieving sequential processing could be by adding a concept of `dependency` between tasks:
+
+- Add a `dependsOn` field on the `Task` objects that are passed around the system which would contain one or more task `id`s.
+- Move from storing the results on a list to individual entries in Redis, keyed by the task `id`.
+- When a slave pick up a task, it now needs to check for the existence of all the `id`s found in the `dependsOn` list.
+- If all of the dependencies are found, process the task, otherwise put the task back in the queue and pick up the next task.
